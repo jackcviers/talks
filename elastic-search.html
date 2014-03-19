@@ -1,0 +1,976 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>(Elasticsearch - Why and How)</title>
+<meta name="author" content="(Jack Viers)"/>
+<link rel="stylesheet" href="http://localhost:8000/css/reveal.min.css"/>
+<link rel="stylesheet" href="http://localhost:8000/css/theme/moon.css" id="theme"/>
+<link rel="stylesheet" href="../lib/css/zenburn.css"/>
+<link rel="stylesheet" href="http://localhost:8000/css/print/pdf.css" type="text/css" media="print"/>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<meta name="description" content="Elasticsearch Introduction.">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section>
+<h1>Elasticsearch - Why and How</h1>
+<h2>Jack Viers</h2>
+<h2><a href="mailto:jack.viers@banno.com">jack.viers@banno.com</a></h2>
+<h2></h2></section>
+<section>
+<h2>Table of Contents</h2><ul>
+<li>
+<a href="#sec-1">What is Elasticsearch</a>
+</li>
+<li>
+<a href="#sec-2">Why Elasticsearch</a>
+</li>
+<li>
+<a href="#sec-3">How Assets uses Elasticsearch</a>
+</li>
+<li>
+<a href="#sec-4">DONTS</a>
+</li>
+<li>
+<a href="#sec-5">DOS</a>
+</li>
+<li>
+<a href="#sec-6">More fun stuff that can't be covered in one talk!</a>
+</li>
+</ul>
+</section>
+<section id="sec-1" >
+
+<h2>What is Elasticsearch</h2>
+<ul class="org-ul">
+<li>A distributed search engine
+</li>
+<li>Built on Apache Lucene
+</li>
+<li>Highly performant
+</li>
+<li>Easy to cluster
+</li>
+<li>Multi-tenant
+</li>
+<li>Multi-typed
+</li>
+<li>RESTful
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Elastic search is an open source, eventually consistent, distributed search engine built on Apache Lucene
+</li>
+<li>It is easy to cluster, and highly performant in both the indexing and querying states
+</li>
+<li>Can contain multiple indices
+</li>
+<li>Can index multiple types of documents per index
+</li>
+<li>API is completly operated over REST
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2" >
+
+<h2>Why Elasticsearch</h2>
+<ul class="org-ul">
+<li></li>
+</ul>
+<a href="https://cwiki.apache.org/confluence/display/solr/Getting+Started+with+SolrCloud" target="_blank">How to cluster using Solr</a>
+<aside class="notes">
+<p>
+Apache Solr has a cloud capable mode as well. Dependent upon zookeeper, its setup and configuration is complicated.
+</p>
+</aside>
+</section>
+<section>
+<section id="sec-2-1" >
+
+<h3>Indexing with SOLR</h3>
+<pre><code data-trim class="bash">
+$ curl http://localhost:8983/solr/collection1/update -H 'Content-type:application/json' -d '
+[
+  {
+   "id"        : "TestDoc1",
+   "title"     : {"set":"test1"},
+   "revision"  : {"inc":3},
+   "publisher" : {"add":"TestPublisher"}
+  },
+  {
+   "id"        : "TestDoc2",
+   "publisher" : {"add":"TestPublisher"}
+  }
+]'
+</code></pre>
+<ul class="org-ul">
+<li>The collection has to exist in the configset for solr cloud, describing the collection.
+</li>
+<li>Uses operations rather than treating the document as a strict post.
+</li>
+<li>Uses commands to update the index.
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Much more complicated than Elasticsearch, as we will see.
+</li>
+<li>Uses stateful commands. Yuck.
+</li>
+<li>Just not user-friendly.
+</li>
+</ul>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-2" >
+
+<h3>Searching with SOLR</h3>
+<pre><code data-trim class="bash">
+$ curl -XGET http://localhost:8983/solr/collection1/select?q=solr&wt=json
+</code></pre>
+<ul class="org-ul">
+<li>Querying is done by hitting the SELECT endpoint on a collection.
+</li>
+<li>GET request parameters are used to define the query syntax.
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>GET parameter query definitions are not as easy as elasticsearches json form
+</li>
+<li>As you will see, Elasticsearch is just easier to work with.
+</li>
+</ul>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-3" >
+
+<h3>Clustering With Elasticsearch</h3>
+<ul class="org-ul">
+<li>Step 1
+</li>
+</ul>
+<img src="ESHowToCluster.png" />
+<aside class="notes">
+<p>
+First, start an es node with -f (so we can see what is happening)
+</p>
+</aside>
+</section>
+<section id="sec-2-3-1" >
+
+<h4>Clustering with Elasticsearch</h4>
+<ul class="org-ul">
+<li>Step 2
+</li>
+</ul>
+<img src="ES_HOW_TOCLUSTER2.png" />
+<aside class="notes">
+<p>
+Second, start a second es node.
+</p>
+</aside>
+
+</section>
+<section id="sec-2-3-2" >
+
+<h4>Clustering with Elasticsearch</h4>
+<ul class="org-ul">
+<li>Step 3
+</li>
+</ul>
+<img src="ES_HOW_TO_CLUSTER3.png" />
+<aside class="notes">
+<p>
+Finally, es picks up the new node and adds it to the cluster. Done.
+Important to note is that this is two commands, using the default configuration right out of the box.
+</p>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-4" >
+
+<h3>Elasticsearch is fault-tolerant</h3>
+<ul class="org-ul">
+<li>Data is distributed to nodes and shards
+</li>
+<li>One node or shard dying won't kill the index
+</li>
+</ul>
+</section>
+
+</section>
+<section>
+<section id="sec-2-5" >
+
+<h3>Elasticsearch has an excellent JSON-BASED Query and Filtering DSL</h3>
+<ul class="org-ul">
+<li>Fuzzy
+</li>
+<li>Term-Matching
+</li>
+<li>Relationship based
+</li>
+<li>Geographical queries
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Elastic search uses JSON as its query DSL.
+</li>
+<li>It supports most common querying needs.
+</li>
+<li>Fuzzy searching provides misspelling and partial match support.
+</li>
+<li>Term matching allows for exact match search.
+</li>
+<li>Geographical matching allows for "around-me" and geoshape based queries.
+</li>
+<li>AND LOTS MORE!
+</li>
+</ul>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-6" >
+
+<h3>Elasticsearch index creation is easy</h3>
+<pre><code data-trim class="bash">
+$ curl -XPUT 'http://localhost:9200/twitter/tweet/1' -d '{
+ "user" : "kimchy",
+ "post_date" : "2009-11-15T14:12:12",
+ "message" : "trying out Elasticsearch"
+ }'
+ </code></pre>
+<aside class="notes">
+<ul class="org-ul">
+<li>You don't need to create an index specifically to start using es.
+</li>
+<li>Just PUT a JSON document to the es node over 9200, under a given index name and type, with an optional id
+</li>
+</ul>
+</aside>
+</section>
+<section id="sec-2-6-1" >
+
+<h4>Index creation Broken down</h4>
+<ul class="org-ul">
+<li>Index NODE
+</li>
+</ul>
+<br /><strong>http://localhost:9200</strong>/twitter/tweet/1
+
+<aside class="notes">
+<ul class="org-ul">
+<li>Some common ES terminology/url structure. The first part is the Node address. This is how you talk to es in the large. It is configurable.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-6-2" >
+
+<h4>Index creation broken down</h4>
+<ul class="org-ul">
+<li>Index NAME
+</li>
+</ul>
+<br />http://localhost:9200/<strong>twitter</strong>/tweet/1
+<aside class="notes">
+<ul class="org-ul">
+<li>The second  part is the index name. Es can have multiple indexes, so don't forget this part.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-6-3" >
+
+<h4>Index creation broken down</h4>
+<ul class="org-ul">
+<li>Index TYPE
+</li>
+</ul>
+<br />http://localhost:9200/twitter/<strong>tweet</strong>/1
+<aside class="notes">
+<ul class="org-ul">
+<li>The third part is the index type name. Es can have multiple types of documents per index, so don't forget this part.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-6-4" >
+
+<h4>Index creation broken down</h4>
+<ul class="org-ul">
+<li>Document ID
+</li>
+</ul>
+<br />http://localhost:9200/twitter/tweet/<strong>1</strong>
+<aside class="notes">
+<ul class="org-ul">
+<li>The final part of the url is optional, but I recommend setting it anyway. It is the id of the document. If you want to find your doc without using the search queries, you are gonna need it.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-6-5" >
+
+<h4>Index creation broken down</h4>
+<ul class="org-ul">
+<li>DOCUMENT
+</li>
+</ul>
+<pre><code data-trim class="json">
+ {
+   "user" : "kimchy",
+   "post_date" : "2009-11-15T14:12:12",
+   "message" : "trying out Elasticsearch"
+ }
+ </code></pre>
+<aside class="notes">
+<ul class="org-ul">
+<li>The body is simply a json document.
+<ul class="org-ul">
+<li>Something I think is extremely cool, besides not having to explicitly create the index, is that I don't HAVE to create my own mappings for the document. ES figures it out.
+</li>
+<li>Docs can miss fields. ES will figure it out.
+</li>
+<li>Docs can have times/locations/bits/ints/doubles and you can do ranges on all of it. ES'll figure it out.
+</li>
+</ul>
+</li>
+</ul>
+</aside>
+</section>
+</section>
+<section>
+<section id="sec-2-7" >
+
+<h3>Searching Elasticsearch is easy</h3>
+<pre><code data-trim class="bash">
+$ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+  "query" : {
+    "term" : { "user" : "kimchy" }
+  }
+}'
+</code></pre>
+</section>
+<section id="sec-2-7-1" >
+
+<h4>Search broken down</h4>
+<ul class="org-ul">
+<li>Search NODE
+</li>
+</ul>
+<br /><strong>http://localhost:9200</strong>/twitter/tweet/_search
+<aside class="notes">
+<ul class="org-ul">
+<li>Search is simply a GET to _search.
+</li>
+<li>The node you want to search on. This is clusterable, so it could be any node in the cluster.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-7-2" >
+
+<h4>Search broken down</h4>
+<ul class="org-ul">
+<li>OPTIONAL Index NAME
+</li>
+</ul>
+<br />http://localhost:9200/<strong>twitter</strong>/tweet/_search
+
+<aside class="notes">
+<ul class="org-ul">
+<li>Search in es is multi-index. Don't know where to look? just hit node/<sub>search</sub>
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-7-3" >
+
+<h4>Search broken down</h4>
+<ul class="org-ul">
+<li>OPTIONAL Index TYPE
+</li>
+</ul>
+<br />http://localhost:9200/twitter/<strong>tweet</strong>/_search
+
+<aside class="notes">
+<ul class="org-ul">
+<li>Search in es is multi-type. Don't remember what type you put that doc under? just hit node/index/<sub>search</sub>
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-2-7-4" >
+
+<h4>Search broken down</h4>
+<ul class="org-ul">
+<li>Resource: _search
+</li>
+</ul>
+<br />http://localhost:9200/twitter/tweet/<strong>_search</strong>
+
+<aside class="notes">
+<ul class="org-ul">
+<li>Only part you need to actually find anything. Everything else is a filter for the search space.
+</li>
+</ul>
+</aside>
+</section>
+<section id="sec-2-7-5" >
+
+<h4>SEARCH broken down</h4>
+<pre><code data-trim class="json">
+ {
+  "query" : {
+    "term" : { "user" : "kimchy" }
+  }
+ }
+</code></pre>
+
+<aside class="notes">
+<ul class="org-ul">
+<li>Here's where things get interesting.
+</li>
+<li>Es query lang is an extended form of json
+</li>
+<li>You define the query using the query field, passing an object of query types.
+</li>
+<li>By default it only takes one query, but you can use match<sub>all</sub>, boolean, etc to do fun stuff.
+</li>
+<li>I ENCOURAGE you to read the query dsl. It is too big to cover in this session, but it can do a lot of stuff. Link on next slide.
+</li>
+</ul>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-8" >
+
+<h3>Searching Elasticsearch</h3>
+<ul class="org-ul">
+<li>Searching in elasticsearch is called querying
+</li>
+<li>can be done via GET parameters like lucene and Solr
+</li>
+<li>Uses extended GET to submit a body request for better query languages
+</li>
+<li>Query results are scored, and sorted by best match
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>While querying in es can be done via the uri, it is better to use the extended GET format and submit the json query dsl
+</li>
+<li>Document hits are returned and scored in queries. Score is a measurement of how well the document matches the query.
+</li>
+<li>Scores can be boosted for parts of a query that are more important than others.
+</li>
+<li>Will show some examples of common queries on the next few slides.
+</li>
+</ul>
+</aside>
+</section>
+<section id="sec-2-8-1" >
+
+<h4>Query DSL: match_all</h4>
+<pre><code data-trim class="bash">
+$ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+   "query" : {
+     "match_all" : {}
+   }
+}'</code></pre>
+<ul class="org-ul">
+<li>#+REVEAL_HTML: match_all matches all documents in an index or index type
+</li>
+<li>Useful when listing lots of results
+</li>
+<li>Filters can be used to pare down the results
+</li>
+</ul>
+
+</section>
+<section id="sec-2-8-2" >
+
+<h4>Query DSL: fuzzy</h4>
+<pre><code data-trim class="bash">
+$ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+   "query" : {
+     {
+       "fuzzy" : {
+         "user" : {
+           "value" :         "ki",
+           "boost" :         1.0,
+           "fuzziness" :     2,
+           "prefix_length" : 0,
+           "max_expansions": 100
+         }
+       }
+     } 
+   }
+ }'</code></pre>
+<ul class="org-ul">
+<li>Allows you to search by part of a field value
+</li>
+<li>Specify field
+</li>
+<li>What the distance of difference of the value has to be for the field
+</li>
+<li>How many exact characters must match
+</li>
+<li>Computationally expensive &#x2013; use max_expansions to limit matches
+</li>
+</ul>
+
+</section>
+<section id="sec-2-8-3" >
+
+<h4>Query DSL: match</h4>
+<pre><code data-trim class="bash">
+$ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+ "query" : {
+   "match" : {
+       "message" : {
+         "query" : "this is a test",
+         "operator" : "and",
+         "boost" :         1.0,
+         "fuzziness" :     2,
+         "prefix_length" : 0,
+         "max_expansions": 100
+       }
+     }
+   }
+ }'</code></pre>
+<ul class="org-ul">
+<li>Matches phrases and single terms and numeric/date ranges
+</li>
+<li>Specify field
+</li>
+<li>Can be fuzzy - same ideas apply
+</li>
+<li>Fuzziness in this case matches individual words (terms)
+</li>
+<li>match_phrase queries match on many terms
+</li>
+<li>Can be multiple fields &#x2013; each has its own options and is combined with logical OR by default
+</li>
+</ul>
+
+</section>
+<section id="sec-2-8-4" >
+
+<h4>Query DSL: span_first</h4>
+<pre><code data-trim class="bash">
+  $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+ "query" : {
+   {
+     "span_first" : {
+       "match" : {
+         "span_term" : { "user" : "kimchy" }
+       },
+       "end" : 3
+     }
+   }
+ }'</code></pre>
+<ul class="org-ul">
+<li>Matches parts of a field at the beginning exactly ("kim" in the user field, here)
+</li>
+<li>Specify field and value as an object
+</li>
+<li>End is the number of characters to care about
+</li>
+</ul>
+</section>
+
+</section>
+<section>
+<section id="sec-2-9" >
+
+<h3>IMPORTANT: Do as little as possible with search queries.</h3>
+<ul class="org-ul">
+<li>Query only enough to roughly find what you want.
+</li>
+<li>Use the FILTER DSL to project/transform/pare down search results.
+</li>
+</ul>
+<aside class="notes">
+<p>
+FILTERs are cached. Querying is slow compared to this. Go rough, then filter in memory. Users will thank you.
+</p>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-10" >
+
+<h3>Filtering in es is easy:</h3>
+<pre><code data-trim class="bash">
+$ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+  "query" : {
+    "match_all" : { }
+  },
+  "filter" : {
+    "term" : { "user" : "kimchy" }
+  }
+}'</code></pre>
+<aside class="notes">
+<ul class="org-ul">
+<li>You should always filter instead of query if you can to reduce the search space.
+</li>
+<li>Most qeury types have analagous filter types.
+</li>
+<li>You define filters by putting them in a filter object after the query in the body.
+</li>
+<li>I ENCOURAGE you to read the filter dsl. It is too big to cover in this session, but it can do a lot of stuff. Link on next slide.
+</li>
+</ul>
+</aside>
+</section>
+
+</section>
+<section>
+<section id="sec-2-11" >
+
+<h3>Query DSL and Filter DSL Docs</h3>
+<ul class="org-ul">
+<li>Query DSL <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html</a>
+</li>
+<li>Filter DSL <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filters.html">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filters.html</a>
+</li>
+</ul>
+</section>
+
+</section>
+<section id="sec-3" >
+
+<h2>How Assets uses Elasticsearch</h2>
+<ul class="org-ul">
+<li>HTTP and JSON are great
+</li>
+<li>But there are decent Java/Scala wrappers out there for es
+</li>
+</ul>
+</section>
+<section>
+<section id="sec-3-1" >
+
+<h3>Elastic4s</h3>
+<ul class="org-ul">
+<li><a href="https://github.com/sksamuel/elastic4s">https://github.com/sksamuel/elastic4s</a>
+</li>
+<li>Nice asynchronous dsl over Java elasticsearch API
+</li>
+</ul>
+ <pre><code data-trim class="scala">
+import com.sksamuel.elastic4s.ElasticClient
+import com.sksamuel.elastic4s.ElasticDsl._
+
+object Test extends App {
+  val client = ElasticClient.local
+  client execute { index into "bands/singers" fields "name"->"chris martin" }
+}</code></pre>
+</section>
+<section id="sec-3-1-1" >
+
+<h4>Elastic4s Connecting in ASSETS</h4>
+<pre><code data-trim class="scala">
+ lazy val settings = ImmutableSettings
+   .settingsBuilder()
+   .put(
+     "cluster.name",
+     getConfigString("elasticsearch.clustername"))
+   .put("client.transport.ping_timeout",
+     getConfigInt("elasticsearch.pingTimeout") +
+       getConfigString("elasticsearch.pingTimeoutTimeUnit"))
+   .put(
+     "client.transport.ignore_cluster_name",
+     getConfigBoolean("elasticsearch.ignoreClusterName"))
+   .build()
+
+ lazy val client = ElasticClient
+   .remote(
+     settings,
+     (getConfigString("elasticsearch.host"),getConfigInt("elasticsearch.port")))</code></pre>
+<aside class="notes">
+<ul class="org-ul">
+<li>When using es in production it has several knobs you can tweak. We do.
+</li>
+<li>The first, and most important, is the cluster name. We run several clusters, and to prevent index collisions we set that for our separate environments.
+</li>
+<li>When running locally, for tests, we need to turn off using the cluster name. We do that.
+</li>
+<li>Setting all this up means we can run a remote client, instead of an in-memory, local client. We do that too.
+</li>
+<li>ImmutableSettings is a map-like java object given by the java api. Elastic4s is nice about its query language and client connection stuff, but doesn't handle everything. Sad.
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-3-1-2" >
+
+<h4>Elastic4s Indexing</h4>
+<pre><code data-trim class="scala">
+ client.execute {
+   index into indexName -> institutionId fields (em.mapped(asset)) id asset.id
+ } map arc.convert</code></pre>
+
+<ul class="org-ul">
+<li>em stands for "ElasticMapper".
+</li>
+<li>arc stands for "ActionResponseConvertable".
+</li>
+<li>All of the requests made to Elasticsearch return an ActionResponse.
+
+You can see the <a href="https://github.com/Banno/assets/blob/master/server/src/main/scala/ElasticSearchConversions.scala" target="_blank">Conversions</a> typeclasses here.
+</li>
+</ul>
+
+<aside class="notes">
+<ul class="org-ul">
+<li>elastic4s has a nice, safe, asynchronous dsl that lets you use the elasticsearch query dsl without too much work.
+</li>
+<li>We made it nicer to deal with, because we were making maps and traversing results all over the place, and it gets ugly.
+</li>
+<li>em.mapped returns a Map[String, Any] for the underlying java api
+</li>
+<li>arc.convert changes the returned ActionResponse into some nice models for our purposes.
+</li>
+<li>Steal it, make it better. Kind of a fun way to learn the elasticsearch source is to make your own ActionResponseConvertable to get out what you want.
+</li>
+<li>You can see that we've handled returning search results, index results, and delete results. There are lots of others, but they all have the same general structure. (READ CODE)
+</li>
+</ul>
+</aside>
+
+</section>
+<section id="sec-3-1-3" >
+
+<h4>Elastic4s Searching: Common operations</h4>
+<ul class="org-ul">
+<li>Common operations are split into their own local definitions for reuse.
+</li>
+</ul>
+
+</section>
+<section id="sec-3-1-4" >
+
+<h4>Elastic4s Searching: Common operations</h4>
+<pre><code data-trim class="scala">
+  // wrap up the client execution and return conversion logic
+  lazy val executeSearch: (SearchDefinition) =>
+    (ActionResponseConvertable[SearchResponse, AssetSearch]) =>
+      Future[AssetSearch] = (s) =>
+        (arc) => client.execute { s } map arc.convert</code></pre>
+<ul class="org-ul">
+<li>Everything needs client.execute, and to have its response converted.
+</li>
+</ul>
+
+</section>
+<section id="sec-3-1-5" >
+
+<h4>Elastic4s Searching: Common operations</h4>
+<pre><code data-trim class="scala">
+ // take an institutionId if we have one or none if we don't and return the
+ // correct starting search definition for both possibilities
+ lazy val maybeSearchInstitution: (Option[String]) => SearchDefinition =
+   (institutionId) => institutionId map { i =>
+     search in indexName -> i
+   } getOrElse (search in indexName)</code></pre>
+<ul class="org-ul">
+<li>institution ids are used as index names
+</li>
+<li>Elasticsearch doesn't require index names to search, so we allow searching by both with this
+</li>
+</ul>
+
+</section>
+<section id="sec-3-1-6" >
+
+<h4>Elastic4s Searching: Common operations</h4>
+<pre><code data-trim class="scala">
+// common query -- perform a fuzzy search on some field with some given value,
+// with the optional institutition id
+lazy val fuzzySearch: (Option[String]) =>
+  (String) => (String) => SearchDefinition = (maybeInstitution) =>
+  (field) => (value) =>
+    maybeSearchInstitution(maybeInstitution) query
+      fuzzyQuery(field)(value)
+
+   // take a field and a value and return a fuzzy query definition with our common settings
+   lazy val fuzzyQuery: (String) => (String) => MatchQueryDefinition = (field) =>
+     (value) => matchQuery(field, value).boost(4)
+       .maxExpansions(10)
+       .prefixLength(3)</code></pre>
+<ul class="org-ul">
+<li>Handling typos is common. MatchQuery does that with some limits on expansions and prefix length.
+</li>
+<li>Querying fuzzily is supported on multiple fields.
+</li>
+</ul>
+
+</section>
+<section id="sec-3-1-7" >
+
+<h4>Elastic4s Searching: Example</h4>
+<pre><code data-trim class="scala">
+ def searchFuzzyTitle(
+   institutionId: Option[String],
+   title: String,
+   size: Int,
+   offset: Int, sortField: String, sortDirection: String)(
+     implicit arc: ActionResponseConvertable[SearchResponse, AssetSearch]):
+     Future[AssetSearch] =
+   executeSearch(fuzzySearch(institutionId)("filename")(title)
+       start offset limit size sortByScoreAnd
+         (sortField, sortDirection))(arc)</code></pre>
+<ul class="org-ul">
+<li>Search for a fuzzy filename, start at the given record, limit it to n results, and sort the return by query score and the given fields and direction.
+</li>
+<li>fuzzySearch includes the call to maybeSearchInstitution.
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>if time, do more code reading on the different searches, and show the query dsl conversions in the terminal.
+</li>
+</ul>
+</aside>
+</section>
+</section>
+<section id="sec-4" >
+
+<h2>DONTS</h2>
+<ul class="org-ul">
+<li>Don't create connections to the client on accident. We did that. It eats your memory.
+</li>
+<li>Query to reduce the results instead of filtering. Filtering caches and doesn't (in general) compute scores. You have to use it when things get big.
+</li>
+<li>Elasticsearch is for search. Don't use it as a primary datastore.
+</li>
+<li>Rely on something being indexed and available immediately after you queue it to be indexed. ES is async and eventually consistent.
+</li>
+</ul>
+
+</section>
+<section id="sec-5" >
+
+<h2>DOS</h2>
+<ul class="org-ul">
+<li>Rebuild your index if you have to. Elasticsearch takes care of it, so if things start looking
+</li>
+</ul>
+<p>
+weird just run a job to pull from your primary data store and reindex everything.
+</p>
+<ul class="org-ul">
+<li>Pool your Elasticsearch clients. We are moving to that.
+</li>
+<li>Separate indexing from searching. You search should not wait on some indexing operation. Separate concerns.
+</li>
+</ul>
+
+</section>
+<section id="sec-6" >
+
+<h2>More fun stuff that can't be covered in one talk!</h2>
+<ul class="org-ul">
+<li>Elastic4s: <a href="https://github.com/sksamuel/elastic4s">https://github.com/sksamuel/elastic4s</a>
+</li>
+<li>Plugins: <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-plugins.html">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-plugins.html</a>
+</li>
+<li>Analyzers: <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-analyzers.html#default-analyzers">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-analyzers.html#default-analyzers</a>
+</li>
+<li>Mappings: <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping.html#all-mapping-types">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping.html#all-mapping-types</a>
+</li>
+<li>Percolation: <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html#_percolate_api">http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html#_percolate_api</a>
+</li>
+</ul>
+<aside class="notes">
+<ul class="org-ul">
+<li>Elastic4s is awesomer than the java api and it stays current with latest releases.
+</li>
+<li>There are lots of plugins you can use and create to change the behavior of your cluster.
+</li>
+<li>Analyzers are ways of tokenizing and doing analysis on bodies of data. ES has a lot of them, but they are worth another talk.
+</li>
+<li>Mappings can be created outside of the automatic ones ES makes for you. You can create relationships, assign custom analyzers to fields, new datatypes for fields.
+</li>
+<li>Percolation is a newish feature that allows you to submit a document to es and get a list of named queries that the document will match for back. Useful for alerting and notifications.
+</li>
+</ul>
+</aside>
+</section>
+</div>
+</div>
+<p> Created by jack.viers. </p>
+<script src="http://localhost:8000/lib/js/head.min.js"></script>
+<script src="http://localhost:8000/js/reveal.min.js"></script>
+<script>
+
+        		// Full list of configuration options available here:
+        		// https://github.com/hakimel/reveal.js#configuration
+        		Reveal.initialize({
+        			controls: true,
+        			progress: true,
+        			history: false,
+        			center: true,
+                                slideNumber: true,
+        			rollingLinks: true,
+        			keyboard: true,
+        			overview: true,
+        			width: 1200, // slide width
+        			height: 800, // slide height
+        			margin: 0.05, // slide margin
+        			minScale: 0.50, // slide minimum scaling factor
+        			maxScale: 2.50, // slide maximum scaling factor
+
+
+        			theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        			transition: Reveal.getQueryHash().transition || 'cube', // default/cube/page/concave/zoom/linear/fade/none
+        			transitionSpeed: 'default',
+
+        			// Optional libraries used to extend on reveal.js
+        			dependencies: [
+        				{ src: 'http://localhost:8000/lib/js/classList.js', condition: function() { return !document.body.classList; } }
+        				,{ src: 'http://localhost:8000/plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } }
+        				,{ src: 'http://localhost:8000/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } }
+        				,{ src: 'http://localhost:8000/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+        				,{ src: 'http://localhost:8000/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } }
+        				,{ src: 'http://localhost:8000/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        				// { src: 'http://localhost:8000/plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+        				// { src: 'http://localhost:8000/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+         				
+        			]
+        		});
+</script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+#+Title: Elasticsearch - Why and How
+#+Author: Jack Viers
+#+Email: jack.viers@banno.com
+
+#+OPTIONS: reveal_center:t reveal_progress:t reveal_history:nil reveal_control:t
+#+OPTIONS: reveal_mathjax:t reveal_rolling_links:t reveal_keyboard:t reveal_overview:t num:nil
+#+OPTIONS: reveal_width:1200 reveal_height:800
+#+OPTIONS: toc:1
+#+OPTIONS: ^:{}
+#+REVEAL_MARGIN: 0.05
+#+REVEAL_MIN_SCALE: 0.5
+#+REVEAL_MAX_SCALE: 2.5
+#+REVEAL_TRANS: cube
+#+REVEAL_THEME: moon
+#+REVEAL_HLEVEL: 2
+#+REVEAL_HEAD_PREAMBLE: <meta name="description" content="Elasticsearch Introduction.">
+#+REVEAL_POSTAMBLE: <p> Created by jack.viers. </p>
+#+REVEAL_EXTRA_CSS: ../lib/css/zenburn.css
+* What is Elasticsearch
+  - A distributed search engine
+  - Built on Apache Lucene
+  - Highly performant
+  - Easy to cluster
+  - Multi-tenant
+  - Multi-typed
+  - RESTful
+#+BEGIN_NOTES
+- Elastic search is an open source, eventually consistent, distributed search engine built on Apache Lucene
+- It is easy to cluster, and highly performant in both the indexing and querying states
+- Can contain multiple indices
+- Can index multiple types of documents per index
+- API is completly operated over REST
+#+END_NOTES
+* Why Elasticsearch
+  -
+  #+REVEAL_HTML: <a href="https://cwiki.apache.org/confluence/display/solr/Getting+Started+with+SolrCloud" target="_blank">How to cluster using Solr</a>
+    #+BEGIN_NOTES
+    Apache Solr has a cloud capable mode as well. Dependent upon zookeeper, its setup and configuration is complicated.
+    #+END_NOTES
+** Indexing with SOLR
+   #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl http://localhost:8983/solr/collection1/update -H 'Content-type:application/json' -d '
+   [
+     {
+      "id"        : "TestDoc1",
+      "title"     : {"set":"test1"},
+      "revision"  : {"inc":3},
+      "publisher" : {"add":"TestPublisher"}
+     },
+     {
+      "id"        : "TestDoc2",
+      "publisher" : {"add":"TestPublisher"}
+     }
+   ]'
+   </code></pre>
+   #+END_HTML
+   - The collection has to exist in the configset for solr cloud, describing the collection.
+   - Uses operations rather than treating the document as a strict post.
+   - Uses commands to update the index.
+   #+BEGIN_NOTES
+   - Much more complicated than Elasticsearch, as we will see.
+   - Uses stateful commands. Yuck.
+   - Just not user-friendly.
+   #+END_NOTES
+** Searching with SOLR
+   #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XGET http://localhost:8983/solr/collection1/select?q=solr&wt=json
+   </code></pre>
+   #+END_HTML
+   - Querying is done by hitting the SELECT endpoint on a collection.
+   - GET request parameters are used to define the query syntax.
+   #+BEGIN_NOTES
+   - GET parameter query definitions are not as easy as elasticsearches json form
+   - As you will see, Elasticsearch is just easier to work with.
+   #+END_NOTES
+** Clustering With Elasticsearch
+   - Step 1
+   #+REVEAL_HTML: <img src="ESHowToCluster.png" />
+   #+BEGIN_NOTES
+   First, start an es node with -f (so we can see what is happening)
+   #+END_NOTES
+*** Clustering with Elasticsearch
+   - Step 2
+   #+REVEAL_HTML: <img src="ES_HOW_TOCLUSTER2.png" />
+   #+BEGIN_NOTES
+   Second, start a second es node.
+   #+END_NOTES
+*** Clustering with Elasticsearch
+   - Step 3
+   #+REVEAL_HTML: <img src="ES_HOW_TO_CLUSTER3.png" />
+   #+BEGIN_NOTES
+   Finally, es picks up the new node and adds it to the cluster. Done.
+   Important to note is that this is two commands, using the default configuration right out of the box.
+   #+END_NOTES
+** Elasticsearch is fault-tolerant
+   - Data is distributed to nodes and shards
+   - One node or shard dying won't kill the index
+** Elasticsearch has an excellent JSON-BASED Query and Filtering DSL
+   - Fuzzy
+   - Term-Matching
+   - Relationship based
+   - Geographical queries
+   #+BEGIN_NOTES
+   - Elastic search uses JSON as its query DSL.
+   - It supports most common querying needs.
+   - Fuzzy searching provides misspelling and partial match support.
+   - Term matching allows for exact match search.
+   - Geographical matching allows for "around-me" and geoshape based queries.
+   - AND LOTS MORE!
+   #+END_NOTES
+** Elasticsearch index creation is easy
+   #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XPUT 'http://localhost:9200/twitter/tweet/1' -d '{
+    "user" : "kimchy",
+    "post_date" : "2009-11-15T14:12:12",
+    "message" : "trying out Elasticsearch"
+    }'
+    </code></pre>
+   #+END_HTML
+   #+BEGIN_NOTES
+   - You don't need to create an index specifically to start using es.
+   - Just PUT a JSON document to the es node over 9200, under a given index name and type, with an optional id
+   #+END_NOTES
+*** Index creation Broken down
+    - Index NODE
+    #+REVEAL_HTML: <br /><strong>http://localhost:9200</strong>/twitter/tweet/1
+    
+   #+BEGIN_NOTES
+   - Some common ES terminology/url structure. The first part is the Node address. This is how you talk to es in the large. It is configurable.
+   #+END_NOTES
+*** Index creation broken down
+    - Index NAME
+    #+REVEAL_HTML: <br />http://localhost:9200/<strong>twitter</strong>/tweet/1
+    #+BEGIN_NOTES
+   - The second  part is the index name. Es can have multiple indexes, so don't forget this part.
+   #+END_NOTES
+*** Index creation broken down
+    - Index TYPE
+    #+REVEAL_HTML: <br />http://localhost:9200/twitter/<strong>tweet</strong>/1
+    #+BEGIN_NOTES
+   - The third part is the index type name. Es can have multiple types of documents per index, so don't forget this part.
+   #+END_NOTES
+*** Index creation broken down
+    - Document ID
+    #+REVEAL_HTML: <br />http://localhost:9200/twitter/tweet/<strong>1</strong>
+    #+BEGIN_NOTES
+   - The final part of the url is optional, but I recommend setting it anyway. It is the id of the document. If you want to find your doc without using the search queries, you are gonna need it.
+   #+END_NOTES
+*** Index creation broken down
+    - DOCUMENT
+    #+BEGIN_HTML
+   <pre><code data-trim class="json">
+    {
+      "user" : "kimchy",
+      "post_date" : "2009-11-15T14:12:12",
+      "message" : "trying out Elasticsearch"
+    }
+    </code></pre>
+    #+END_HTML
+    #+BEGIN_NOTES
+   - The body is simply a json document.
+     - Something I think is extremely cool, besides not having to explicitly create the index, is that I don't HAVE to create my own mappings for the document. ES figures it out.
+     - Docs can miss fields. ES will figure it out.
+     - Docs can have times/locations/bits/ints/doubles and you can do ranges on all of it. ES'll figure it out.
+    #+END_NOTES
+
+** Searching Elasticsearch is easy
+   #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+     "query" : {
+       "term" : { "user" : "kimchy" }
+     }
+   }'
+   </code></pre>
+   #+END_HTML
+*** Search broken down
+    - Search NODE
+    #+REVEAL_HTML: <br /><strong>http://localhost:9200</strong>/twitter/tweet/_search
+    #+BEGIN_NOTES
+    - Search is simply a GET to _search.
+    - The node you want to search on. This is clusterable, so it could be any node in the cluster.
+    #+END_NOTES
+*** Search broken down
+    - OPTIONAL Index NAME
+    #+REVEAL_HTML: <br />http://localhost:9200/<strong>twitter</strong>/tweet/_search
+
+    #+BEGIN_NOTES
+    - Search in es is multi-index. Don't know where to look? just hit node/_search
+    #+END_NOTES
+*** Search broken down
+    - OPTIONAL Index TYPE
+    #+REVEAL_HTML: <br />http://localhost:9200/twitter/<strong>tweet</strong>/_search
+
+    #+BEGIN_NOTES
+    - Search in es is multi-type. Don't remember what type you put that doc under? just hit node/index/_search
+    #+END_NOTES
+*** Search broken down
+    - Resource: _search
+    #+REVEAL_HTML: <br />http://localhost:9200/twitter/tweet/<strong>_search</strong>
+    
+    #+BEGIN_NOTES
+    - Only part you need to actually find anything. Everything else is a filter for the search space.
+    #+END_NOTES
+
+*** SEARCH broken down
+    #+BEGIN_HTML
+   <pre><code data-trim class="json">
+    {
+     "query" : {
+       "term" : { "user" : "kimchy" }
+     }
+    }
+   </code></pre>
+    #+END_HTML
+    
+    #+BEGIN_NOTES
+    - Here's where things get interesting.
+    - Es query lang is an extended form of json
+    - You define the query using the query field, passing an object of query types.
+    - By default it only takes one query, but you can use match_all, boolean, etc to do fun stuff.
+    - I ENCOURAGE you to read the query dsl. It is too big to cover in this session, but it can do a lot of stuff. Link on next slide.
+    #+END_NOTES
+** Searching Elasticsearch
+   - Searching in elasticsearch is called querying
+   - can be done via GET parameters like lucene and Solr
+   - Uses extended GET to submit a body request for better query languages
+   - Query results are scored, and sorted by best match
+   #+BEGIN_NOTES
+   - While querying in es can be done via the uri, it is better to use the extended GET format and submit the json query dsl
+   - Document hits are returned and scored in queries. Score is a measurement of how well the document matches the query.
+   - Scores can be boosted for parts of a query that are more important than others.
+   - Will show some examples of common queries on the next few slides.
+   #+END_NOTES
+*** Query DSL: match_all
+    #+BEGIN_HTML
+    <pre><code data-trim class="bash">
+    $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+       "query" : {
+         "match_all" : {}
+       }
+    }'</code></pre>
+    #+END_HTML
+    - #+REVEAL_HTML: match_all matches all documents in an index or index type
+    - Useful when listing lots of results
+    - Filters can be used to pare down the results
+*** Query DSL: fuzzy
+    #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+      "query" : {
+        {
+          "fuzzy" : {
+            "user" : {
+              "value" :         "ki",
+              "boost" :         1.0,
+              "fuzziness" :     2,
+              "prefix_length" : 0,
+              "max_expansions": 100
+            }
+          }
+        } 
+      }
+    }'</code></pre>
+    #+END_HTML
+    - Allows you to search by part of a field value
+    - Specify field
+    - What the distance of difference of the value has to be for the field
+    - How many exact characters must match
+    - Computationally expensive -- use max_expansions to limit matches
+*** Query DSL: match
+    #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+    "query" : {
+      "match" : {
+          "message" : {
+            "query" : "this is a test",
+            "operator" : "and",
+            "boost" :         1.0,
+            "fuzziness" :     2,
+            "prefix_length" : 0,
+            "max_expansions": 100
+          }
+        }
+      }
+    }'</code></pre>
+    #+END_HTML
+    - Matches phrases and single terms and numeric/date ranges
+    - Specify field
+    - Can be fuzzy - same ideas apply
+    - Fuzziness in this case matches individual words (terms)
+    - match_phrase queries match on many terms
+    - Can be multiple fields -- each has its own options and is combined with logical OR by default
+*** Query DSL: span_first
+     #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+     $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+    "query" : {
+      {
+        "span_first" : {
+          "match" : {
+            "span_term" : { "user" : "kimchy" }
+          },
+          "end" : 3
+        }
+      }
+    }'</code></pre>
+    #+END_HTML
+    - Matches parts of a field at the beginning exactly ("kim" in the user field, here)
+    - Specify field and value as an object
+    - End is the number of characters to care about
+** IMPORTANT: Do as little as possible with search queries.
+   - Query only enough to roughly find what you want.
+   - Use the FILTER DSL to project/transform/pare down search results.
+   #+BEGIN_NOTES
+   FILTERs are cached. Querying is slow compared to this. Go rough, then filter in memory. Users will thank you.
+   #+END_NOTES
+** Filtering in es is easy:
+   #+BEGIN_HTML
+   <pre><code data-trim class="bash">
+   $ curl -XGET 'http://localhost:9200/twitter/tweet/_search' -d '{
+     "query" : {
+       "match_all" : { }
+     },
+     "filter" : {
+       "term" : { "user" : "kimchy" }
+     }
+   }'</code></pre>
+   #+END_HTML
+   #+BEGIN_NOTES
+    - You should always filter instead of query if you can to reduce the search space.
+    - Most qeury types have analagous filter types.
+    - You define filters by putting them in a filter object after the query in the body.
+    - I ENCOURAGE you to read the filter dsl. It is too big to cover in this session, but it can do a lot of stuff. Link on next slide.
+   #+END_NOTES
+** Query DSL and Filter DSL Docs
+   - Query DSL http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html
+   - Filter DSL http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filters.html
+* How Assets uses Elasticsearch
+  - HTTP and JSON are great
+  - But there are decent Java/Scala wrappers out there for es
+** Elastic4s
+  - https://github.com/sksamuel/elastic4s
+  - Nice asynchronous dsl over Java elasticsearch API
+  #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+  import com.sksamuel.elastic4s.ElasticClient
+  import com.sksamuel.elastic4s.ElasticDsl._
+
+  object Test extends App {
+    val client = ElasticClient.local
+    client execute { index into "bands/singers" fields "name"->"chris martin" }
+  }</code></pre>
+  #+END_HTML
+*** Elastic4s Connecting in ASSETS
+    #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+    lazy val settings = ImmutableSettings
+      .settingsBuilder()
+      .put(
+        "cluster.name",
+        getConfigString("elasticsearch.clustername"))
+      .put("client.transport.ping_timeout",
+        getConfigInt("elasticsearch.pingTimeout") +
+          getConfigString("elasticsearch.pingTimeoutTimeUnit"))
+      .put(
+        "client.transport.ignore_cluster_name",
+        getConfigBoolean("elasticsearch.ignoreClusterName"))
+      .build()
+
+    lazy val client = ElasticClient
+      .remote(
+        settings,
+        (getConfigString("elasticsearch.host"),getConfigInt("elasticsearch.port")))</code></pre>
+    #+END_HTML
+    #+BEGIN_NOTES
+    - When using es in production it has several knobs you can tweak. We do.
+    - The first, and most important, is the cluster name. We run several clusters, and to prevent index collisions we set that for our separate environments.
+    - When running locally, for tests, we need to turn off using the cluster name. We do that.
+    - Setting all this up means we can run a remote client, instead of an in-memory, local client. We do that too.
+    - ImmutableSettings is a map-like java object given by the java api. Elastic4s is nice about its query language and client connection stuff, but doesn't handle everything. Sad.
+    #+END_NOTES
+*** Elastic4s Indexing
+    #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+    client.execute {
+      index into indexName -> institutionId fields (em.mapped(asset)) id asset.id
+    } map arc.convert</code></pre>
+    #+END_HTML
+
+    - em stands for "ElasticMapper".
+    - arc stands for "ActionResponseConvertable".
+    - All of the requests made to Elasticsearch return an ActionResponse.
+
+      #+REVEAL_HTML: You can see the <a href="https://github.com/Banno/assets/blob/master/server/src/main/scala/ElasticSearchConversions.scala" target="_blank">Conversions</a> typeclasses here.
+    
+    #+BEGIN_NOTES
+    - elastic4s has a nice, safe, asynchronous dsl that lets you use the elasticsearch query dsl without too much work.
+    - We made it nicer to deal with, because we were making maps and traversing results all over the place, and it gets ugly.
+    - em.mapped returns a Map[String, Any] for the underlying java api
+    - arc.convert changes the returned ActionResponse into some nice models for our purposes.
+    - Steal it, make it better. Kind of a fun way to learn the elasticsearch source is to make your own ActionResponseConvertable to get out what you want.
+    - You can see that we've handled returning search results, index results, and delete results. There are lots of others, but they all have the same general structure. (READ CODE)
+    #+END_NOTES
+*** Elastic4s Searching: Common operations
+    - Common operations are split into their own local definitions for reuse.
+*** Elastic4s Searching: Common operations
+     #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+     // wrap up the client execution and return conversion logic
+     lazy val executeSearch: (SearchDefinition) =>
+       (ActionResponseConvertable[SearchResponse, AssetSearch]) =>
+         Future[AssetSearch] = (s) =>
+           (arc) => client.execute { s } map arc.convert</code></pre>
+     #+END_HTML
+     - Everything needs client.execute, and to have its response converted.
+*** Elastic4s Searching: Common operations
+     #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+    // take an institutionId if we have one or none if we don't and return the
+    // correct starting search definition for both possibilities
+    lazy val maybeSearchInstitution: (Option[String]) => SearchDefinition =
+      (institutionId) => institutionId map { i =>
+        search in indexName -> i
+      } getOrElse (search in indexName)</code></pre>
+     #+END_HTML
+     - institution ids are used as index names
+     - Elasticsearch doesn't require index names to search, so we allow searching by both with this
+*** Elastic4s Searching: Common operations
+     #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+   // common query -- perform a fuzzy search on some field with some given value,
+   // with the optional institutition id
+   lazy val fuzzySearch: (Option[String]) =>
+     (String) => (String) => SearchDefinition = (maybeInstitution) =>
+     (field) => (value) =>
+       maybeSearchInstitution(maybeInstitution) query
+         fuzzyQuery(field)(value)
+
+      // take a field and a value and return a fuzzy query definition with our common settings
+      lazy val fuzzyQuery: (String) => (String) => MatchQueryDefinition = (field) =>
+        (value) => matchQuery(field, value).boost(4)
+          .maxExpansions(10)
+          .prefixLength(3)</code></pre>
+     #+END_HTML
+     - Handling typos is common. MatchQuery does that with some limits on expansions and prefix length.
+     - Querying fuzzily is supported on multiple fields.
+*** Elastic4s Searching: Example
+    #+BEGIN_HTML
+   <pre><code data-trim class="scala">
+    def searchFuzzyTitle(
+      institutionId: Option[String],
+      title: String,
+      size: Int,
+      offset: Int, sortField: String, sortDirection: String)(
+        implicit arc: ActionResponseConvertable[SearchResponse, AssetSearch]):
+        Future[AssetSearch] =
+      executeSearch(fuzzySearch(institutionId)("filename")(title)
+          start offset limit size sortByScoreAnd
+            (sortField, sortDirection))(arc)</code></pre>
+    #+END_HTML
+    - Search for a fuzzy filename, start at the given record, limit it to n results, and sort the return by query score and the given fields and direction.
+    - fuzzySearch includes the call to maybeSearchInstitution.
+    #+BEGIN_NOTES
+    - if time, do more code reading on the different searches, and show the query dsl conversions in the terminal.
+    #+END_NOTES
+
+* DONTS
+  - Don't create connections to the client on accident. We did that. It eats your memory.
+  - Query to reduce the results instead of filtering. Filtering caches and doesn't (in general) compute scores. You have to use it when things get big.
+  - Elasticsearch is for search. Don't use it as a primary datastore.
+  - Rely on something being indexed and available immediately after you queue it to be indexed. ES is async and eventually consistent.
+* DOS
+  - Rebuild your index if you have to. Elasticsearch takes care of it, so if things start looking
+  weird just run a job to pull from your primary data store and reindex everything.
+  - Pool your Elasticsearch clients. We are moving to that.
+  - Separate indexing from searching. You search should not wait on some indexing operation. Separate concerns.
+* More fun stuff that can't be covered in one talk!
+  - Elastic4s: https://github.com/sksamuel/elastic4s
+  - Plugins: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/modules-plugins.html
+  - Analyzers: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-analyzers.html#default-analyzers
+  - Mappings: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/mapping.html#all-mapping-types
+  - Percolation: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-percolate.html#_percolate_api
+  #+BEGIN_NOTES
+  - Elastic4s is awesomer than the java api and it stays current with latest releases.
+  - There are lots of plugins you can use and create to change the behavior of your cluster.
+  - Analyzers are ways of tokenizing and doing analysis on bodies of data. ES has a lot of them, but they are worth another talk.
+  - Mappings can be created outside of the automatic ones ES makes for you. You can create relationships, assign custom analyzers to fields, new datatypes for fields.
+  - Percolation is a newish feature that allows you to submit a document to es and get a list of named queries that the document will match for back. Useful for alerting and notifications.
+  #+END_NOTES
