@@ -1,0 +1,787 @@
+#+Title: Javascripting, With Style
+#+Author: Jack Viers
+#+Email: jack.viers@banno.com, @jackviers
+
+#+OPTIONS: reveal_center:t reveal_progress:t reveal_history:nil reveal_control:t
+#+OPTIONS: reveal_mathjax:t reveal_rolling_links:t reveal_keyboard:t reveal_overview:t num:nil
+#+OPTIONS: reveal_width:1200 reveal_height:800
+#+OPTIONS: toc:1
+#+OPTIONS: ^:{}
+#+REVEAL_MARGIN: 0.05
+#+REVEAL_MIN_SCALE: 0.5
+#+REVEAL_MAX_SCALE: 2.5
+#+REVEAL_TRANS: cube
+#+REVEAL_THEME: moon
+#+REVEAL_HLEVEL: 2
+#+REVEAL_HEAD_PREAMBLE: <meta name="description" content="Elasticsearch Introduction.">
+#+REVEAL_POSTAMBLE: <p> Created by jack.viers. </p>
+#+REVEAL_EXTRA_CSS: ../lib/css/zenburn.css
+* Life in a post-js world
+  #+REVEAL_HTML: <img src="http://whyirundisney.files.wordpress.com/2012/09/to-infinity-and-beyond.jpg?w=605"/> 
+  #+REVEAL_HTML: <p style="font-size: .5em"><span >Image Credit: - http://whyirundisney.files.wordpress.com/2012/09/to-infinity-and-beyond.jpg?w=605</p>
+  #+BEGIN_NOTES
+  Javascript is the runtime of the web. Interesting stuff exists. We're devs, we live in the future.
+  #+END_NOTES
+* Why ALT-JS
+  #+REVEAL_HTML: <center><blockquote class="twitter-tweet" lang="en"><p>&quot;Tests = ∃x. Types = ∀x.&quot; -- <a href="https://twitter.com/psnively">@psnively</a> and <a href="https://twitter.com/pandamonial">@pandamonial</a></p>&mdash; Jack Viers (@jackviers) <a href="https://twitter.com/jackviers/statuses/367102573460729856">August 13, 2013</a></blockquote><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script></center>
+  #+REVEAL_HTML: <ul><li><a href="http://worrydream.com/LadderOfAbstraction/" target="_blank"> Up and Down the Ladder of Abstraction - Bret Victor</a></li>
+  #+REVEAL_HTML: <li><a href="http://coffeescript.org/#overview" target="_blank">Type less do more - Coffescript</a></li>
+  #+REVEAL_HTML: <li><a href="http://opalang.org/#code" target="_blank">DSLs - Opa</a></li>
+  #+REVEAL_HTML: <li><a href="https://www.destroyallsoftware.com/talks/wat" target="_blank">WAT</a></li>
+  #+REVEAL_HTML: <li>And much more!</li></ul>
+  #+BEGIN_NOTES
+  Everybody that knows me knows I am heavy into js. So why all this fuss about js being the runtime implementation language of the web?
+  There are idiosyncrasies that don't make sense. No typechecking means errors show up at runtime. DSLs provide layers of abstraction.
+  Lots of boilerplate. Functional style. OO style. And much more.
+  #+END_NOTES
+* Levels of Alt
+  - Industrial Strength
+  - DSLs
+  - Experiments
+  #+BEGIN_NOTES
+  There are really three different levels of Alt-js languages.
+  The first are industrial-strength, ready for production use languages.
+  The second are also production ready Domain Specific Languages.
+  The third level is experimental languages where anything, and I mean anything, goes.
+  #+END_NOTES
+** Industrial Strength Languages
+  - Coffeescript
+  - Dart
+  - Typescript
+  - Clojurescript
+*** Coffeescript
+   - http://coffeescript.org
+   - Macro language for js
+   - Dynamic, functional/OO hybrid
+   - Makes js a little nicer by eliminating boilerplate
+   - Seamless js interop
+   - Compiled
+   #+BEGIN_NOTES
+   Coffeescript is really a macro-language for js.
+   It is js with different syntax that helps you avoid gotchas and type less.
+   Interaction with js in CS is seamless, you just call a function.
+   It is a little "prettier" and looks more functional.
+   #+END_NOTES
+   #+BEGIN_HTML
+   <pre><code data-trim class="coffeescript">
+   arr = [
+     1
+     2
+     3
+     4
+     5
+     6
+   ]
+   count = (num) -> "#{num}! #{num} wonderful stars! Ah, ah, ah."
+   (count stars for stars in arr when star % 2 is 0).join ""
+   </code></pre>
+   #+END_HTML
+*** Dart
+   - https://www.dartlang.org/
+   - Optionally typed
+   - Java/JS syntax hybrid
+   - Modular
+   - HOFs and Collections
+   - Annotations
+   - Interpreted and Compiled
+   #+BEGIN_NOTES
+   Dart is an optionally typed js superset
+   Syntax is a mix of Java and Js
+   Designed for development scalability
+   Supports annotations (for custom html extensions and what not)
+   It can be both interpreted in browsers supporting it and compiled.
+   #+END_NOTES
+   #+BEGIN_HTML
+   <pre><code data-trim class="dart">
+import 'dart:math' show Random;        // Import a class from a library.
+
+void main() {                          // The app starts executing here.
+  print(new Die(n: 12).roll());       // Print a new object's value. Chain method calls.
+}
+
+class Die {                            // Define a class.
+  static Random shaker = new Random(); // Define a class variable.
+  int sides, value;                    // Define instance variables.
+
+  String toString() => '$value';      // Define a method using shorthand syntax.
+
+  Die({int n: 6}) {                   // Define a constructor.
+    if (4 <= n && n <= 20) {
+      sides = n;
+    } else {
+      throw new ArgumentError(/* */);  // Support for errors and exceptions.
+    }
+  }
+  int roll() {                         // Define an instance method.
+    return value = shaker.nextInt(sides); // Get a random number.
+  }
+}</code></pre>
+  #+END_HTML
+*** Typescript
+    - http://www.typescriptlang.org/
+    - Optionally typed
+    - Compiled
+    - JS superset
+    - JS Interop (with Definitely typed) https://github.com/borisyankov/DefinitelyTyped
+    #+BEGIN_NOTES
+    Typescript is an optionally typed js language by Microsoft
+    Basically MS answer to dart.
+    REALLY nice.
+    #+END_NOTES
+    #+BEGIN_HTML
+<pre><code data-trim class="typescript">
+export class Greeter
+{
+    element: HTMLElement;
+    span: HTMLElement;
+    timerToken: number;
+
+    constructor (element: HTMLElement)
+    {
+        this.element = element;
+        this.element.innerText += "The time is: ";
+        this.span = document.createElement('span');
+        this.element.appendChild(this.span);
+        this.span.innerText = new Date().toUTCString();
+    }
+
+    start()
+    {
+        this.timerToken = setInterval(() => this.span.innerText = new Date().toUTCString(), 500);
+    }
+
+    stop()
+    {
+        clearTimeout(this.timerToken);
+    }
+}
+</code></pre>   
+#+END_HTML
+*** Clojurescript
+    - Lisp variant
+    - JS Interop
+    - Based on Clojure - http://clojure.org/
+    - Functional
+    - Nice async libraries
+    - Optimizing compiler
+    - Compiled
+
+    #+BEGIN_NOTES
+    Here's where we start to go wider afield
+    Clojurescript is a js run variant of clojure, which is a jvm lisp
+    It is a functional language, with custom integrations for js interop.
+    It has nice asynchronous (event, out of order execution) libraries.
+    It is compiled and optimized using the Google Closure compiler.
+    Very powerful, lifts the level of abstraction over the previous three.
+    #+END_NOTES
+    #+BEGIN_HTML
+    <pre><code data-trim class="clojurescript">
+(ns dom.test
+  (:require [clojure.browser.event :as event]
+            [clojure.browser.dom   :as dom]))
+
+(defn log [& args]
+  (.log js/console (apply pr-str args)))
+
+(defn log-obj [obj]
+  (.log js/console obj))
+
+(defn log-listener-count []
+  (log "listener count: " (event/total-listener-count)))
+
+(def source      (dom/get-element "source"))
+(def destination (dom/get-element "destination"))
+
+(dom/append source
+            (dom/element "Testing me ")
+            (dom/element "out!"))
+
+(def success-count (atom 0))
+
+(log-listener-count)
+
+(event/listen source
+              :click
+              (fn [e]
+                (let [i (swap! success-count inc)
+                      e (dom/element :li
+                                     {:id "testing"
+                                      :class "test me out please"}
+                                     "It worked!")]
+                  (log-obj e)
+                  (log i)
+                  (dom/append destination
+                              e))))
+
+(log-obj (dom/element "Text node"))
+(log-obj (dom/element :li))
+(log-obj (dom/element :li {:class "foo"}))
+(log-obj (dom/element :li {:class "bar"} "text node"))
+(log-obj (dom/element [:ul [:li :li :li]]))
+(log-obj (dom/element :ul [:li :li :li]))
+(log-obj (dom/element :li {} [:ul {} [:li :li :li]]))
+(log-obj (dom/element [:li {:class "baz"} [:li {:class "quux"}]]))
+
+(log-obj source)
+(log-listener-count)
+</pre></code>
+#+END_HTML
+** DSLs
+   - Templating -- Handlebars, etc.
+   - Frameworks -- Opa and Angular
+   #+BEGIN_NOTES
+   DSLs include templating languages and html compilers like Angular, and server/client hybrids like meteor and opa.
+   Typically, some part of the DSL is parsed into the js namespace and extensions are written in js using
+   some kind of pluggable architecture.
+   #+END_NOTES
+*** Handlebars
+    - http://handlebarsjs.com/
+    - Templating language that compiles to js functions
+    - Complete grammar
+    - Extensible via js functions called Helpers
+
+    #+BEGIN_NOTES
+    Handlebars is a DSL for outputting html strings.
+    Expressions can be entered using double-brackets.
+    Expressions can be altered using helper functions defined in js and made known to
+    the handlebars compiler at compile time. fullname is a function helper here.
+    Object literals are passed that contain the names required by the template to the
+    templating engine, and the values are interpolated into the string.
+    Output is a js string that can be used to insert into the dom.
+    #+END_NOTES
+    #+BEGIN_HTML
+    <pre><code data-trim class="html">
+<div class="post">
+  <h1>By {{fullName author}}</h1>
+  <div class="body">{{body}}</div>
+
+  <h1>Comments</h1>
+
+  {{#each comments}}
+  <h2>By {{fullName author}}</h2>
+  <div class="body">{{body}}</div>
+  {{/each}}
+</div>
+</code></pre>
+#+END_HTML
+*** Opa
+   - Typesafe, Inferred
+   - Dual runtime -- server & client
+   - Rich
+   - Functional/OO Hybrid
+   #+BEGIN_NOTES
+   Skipping over angular, the HTML compiler here because you're probably familiar with it.
+   Opa is a hybrid server-side client-side framework for rich web apps.
+   It includes a type inferred OO/Functional paradigm language that lifts the level of abstraction
+   from pure js apps. Seamless js interop is available.
+   Runs on client and server -- one language to rule them all.
+   Supports many functional features like object destructuring and pattern matching, shown here.
+   URL is a Type, and it has properties that can be matched, like path. This guides decision logic.
+   #+END_NOTES
+   #+BEGIN_HTML
+   <pre><code data-trim class="opa">
+function start(url) {
+  match (url) {
+    case {path: {nil} ... } :
+      { display("Hello") };
+    case {path: path ...} :
+      { display(String.concat("::", path)) };
+  }
+}
+</pre></code>   
+   #+END_HTML
+** Experiments
+- Completely different languages than JS
+- ASMjs
+- GHCjs
+- Scal
+#+BEGIN_NOTES
+These are the experimental left field compile to js languages.
+They often are of an entirely different paradigm than js, though they may look similar.
+They are not in heavy production use, but are usable. May take some work to get them to play nice.
+#+END_NOTES
+*** ASMjs
+    - http://asmjs.org/spec/latest/
+    - Type-safe, type annotated optimizable subset of js
+    - REALLY FAST
+    - Intended to be a better compile target for ALT-JS langs (C++ via llvm for example)
+
+    #+BEGIN_NOTES
+    ASM js is a better js compile target, since its js can be optimized heavily at runtime.
+    Type safe.
+    Allows for a target for to js compilers that is stricter than js proper.
+    Included here because I think this will be the lang most to-js langs target in the future.
+    #+END_NOTES
+    #+BEGIN_HTML
+    <pre><code data-trim class="JavaScript">
+function DiagModule(stdlib) {
+    "use asm";
+
+    var sqrt = stdlib.Math.sqrt;
+
+    function square(x) {
+        x = +x;
+        return +(x*x);
+    }
+
+    function diag(x, y) {
+        x = +x;
+        y = +y;
+        return +sqrt(square(x) + square(y));
+    }
+
+    return { diag: diag };
+}
+var fast = DiagModule(window);     // produces AOT-compiled version
+console.log(fast.diag(3, 4));        
+</code></pre>
+    #+END_HTML
+*** GHC Js
+    - Haskell compiled to Javascript
+    - Yes, Haskell
+    - JS interop using FFI (Foreign Function Interface)
+    - Just write haskell
+
+    #+BEGIN_NOTES
+    If you hate dynamic languages, need good libraries, and love functional code, use Haskell.
+    Pretty much the antithesis to js, and at the cutting edge of useful pl out there.
+    Compiles with ghc, and can up the type safety to maximum.
+    Takes some work (that is mostly done in available libraries) to work with traditional js libraries.
+    Uses unsafe FFI to call out to js.
+    Who says you can't do a gui in Haskell?
+    #+END_NOTES
+    #+BEGIN_HTML
+    <pre><code data-trim class="haskell">
+{-# LANGUAGE CPP, TemplateHaskell, QuasiQuotes, ScopedTypeVariables, NoMonomorphismRestriction, Rank2Types, DeriveDataTypeable #-}
+module Main (
+    main, lazyLoad_freecell
+) where
+
+import Prelude hiding ((!!))
+import Control.Monad.Trans ( liftIO )
+import System.IO (stderr, hPutStrLn, stdout, hFlush)
+import GHCJS.DOM (runWebGUI, postGUISync, postGUIAsync, webViewGetDomDocument)
+import GHCJS.DOM.Document
+       (documentCreateElement, documentGetElementById, documentGetBody)
+import GHCJS.DOM.HTMLElement
+       (htmlElementSetInnerText, htmlElementSetInnerHTML)
+import Data.Text.Lazy (Text, unpack)
+import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Text.Hamlet (shamlet)
+import Text.Blaze.Html (Html)
+import GHCJS.DOM.Types
+       (Node(..), castToHTMLElement, castToHTMLDivElement,
+        castToHTMLInputElement)
+import Control.Applicative ((<$>))
+import GHCJS.DOM.Element
+       (elementGetStyle, elementSetAttribute, elementOnclick,
+        elementOnkeypress, elementOnkeyup, elementOnkeydown, elementFocus)
+import GHCJS.DOM.HTMLInputElement
+       (htmlInputElementGetValue)
+import Control.Concurrent
+       (tryTakeMVar, takeMVar, threadDelay, putMVar, forkIO, newEmptyMVar, forkIOWithUnmask)
+import Control.Monad (when, forever)
+import GHCJS.DOM.EventM
+       (mouseShiftKey, mouseCtrlKey)
+import GHCJS.DOM.Node
+       (nodeInsertBefore, nodeAppendChild)
+import GHCJS.DOM.CSSStyleDeclaration
+       (cssStyleDeclarationSetProperty)
+import Language.Javascript.JSaddle
+       (strToText, valToStr, JSNull(..), deRefVal, valToObject, js, JSF(..), js1, js4, jsg,
+        valToNumber, (!), (!!), (#), (<#), global, eval, fun, val, array, new, runJSaddle_,
+        valToText, MakeValueRef(..), JSValue(..), call, JSM(..), JSValueRef)
+import Control.Monad.Reader (ReaderT(..))
+import qualified Data.Text as T (unpack, pack)
+import FRP.Sodium
+import Engine
+import Freecell -- What could this be for ? :-)
+#ifdef jmacro_MIN_VERSION
+import Language.Javascript.JSC
+       (evalJME, evalJM)
+import Language.Javascript.JMacro
+       (jmacroE, jLam, jmacro, renderJs, ToJExpr(..), JStat(..))
+#endif
+import Language.Haskell.TH (Exp(..), Lit(..))
+import System.IO.Unsafe (unsafePerformIO)
+import Control.Lens ((^.))
+import Control.Exception (throwTo, catch, SomeException, Exception)
+import Data.Typeable (Typeable)
+
+data NewValueException = NewValueException deriving (Show, Typeable)
+
+instance Exception NewValueException
+
+main = do
+  -- Running a GUI creates a WebKitGtk window in native code,
+  -- but just returns the browser window when compiled to JavaScript
+  runWebGUI $ \ webView -> do
+    -- WebKitGtk provides the normal W3C DOM functions
+    Just doc <- webViewGetDomDocument webView
+    Just body <- documentGetBody doc
+
+    -- Lets use some Hamlet to replace HTerm with some HTML
+    Just div <- fmap castToHTMLDivElement <$> documentCreateElement doc "div"
+    htmlElementSetInnerHTML div . unpack $ renderHtml [shamlet|$newline always
+    ....
+    |]
+    -- Now we need to add this div to the document body
+    -- If we are in the browser then let's shrink the terminal window to make room
+    mbTerminal <- fmap castToHTMLDivElement <$> documentGetElementById doc "terminal"
+    case mbTerminal of
+      Just terminal -> do
+        Just style <- elementGetStyle terminal
+        cssStyleDeclarationSetProperty style "height" "200px" ""
+        cssStyleDeclarationSetProperty style "position" "absolute" ""
+        cssStyleDeclarationSetProperty style "bottom" "0" ""
+        nodeInsertBefore body (Just div) (Just terminal)
+      _             -> do
+        nodeAppendChild body (Just div)
+
+    -- We can get the elements by ID
+    Just numInput <- fmap castToHTMLInputElement <$> documentGetElementById doc "num"
+    Just prime    <- fmap castToHTMLDivElement   <$> documentGetElementById doc "prime"
+    Just heading  <- fmap castToHTMLElement      <$> documentGetElementById doc "heading"
+
+    -- You can also use your favorite JavaScript libraries
+
+    -- Run JavaScript using postGUISync to make sure it runs on the Gtk thread.
+    -- This should avoid threading issues when using WebKitGTK+.
+    let runjs = postGUIAsync . runJSaddle_ webView
+
+    runjs $ do
+        -- Declare the javascript property getters we will be using
+        document <- jsg "document"
+        let getElementById = js1 "getElementById"
+            getContext     = js1 "getContext"
+            fillStyle      = js "fillStyle"
+            fillRect :: Double -> Double -> Double -> Double -> JSF
+            fillRect       = js4 "fillRect"
+
+        -- var canvas = document.getElementById("canvas")
+        canvas <- document ^. getElementById "canvas"
+
+        -- var ctx = canvas.getContext("2d")
+        ctx <- canvas ^. getContext "2d"
+
+        liftIO . forkIO . forever $ do
+            runjs $ do
+                -- ctx.fillStyle = "#00FF00"
+                -- ctx.fillRect( 0, 0, 150, 75 )
+                ctx ^. fillStyle <# "#00FF00"
+                ctx ^. fillRect 0 0 10 10
+            liftIO $ threadDelay 500000
+            runjs $ do
+                ctx ^. fillStyle <# "#FF0000"
+                ctx ^. fillRect 0 0 10 10
+            liftIO $ threadDelay 500000
+
+    -- We don't want to work on more than on prime number test at a time.
+    -- So we will have a single worker thread and a queue with just one value.
+    next <- newEmptyMVar
+    ready <- newEmptyMVar
+    worker <- forkIOWithUnmask $ \unmask -> forever $ (do
+              putMVar ready ()
+              n <- takeMVar next
+              postGUISync $ do
+                  htmlElementSetInnerHTML prime $ "Thinking about " ++ n
+              unmask . postGUISync $ do
+                  htmlElementSetInnerHTML prime . unpack $ validatePrime n)
+         `catch` \ (e :: SomeException) -> print e
+
+    -- Something to set the next work item
+    let setNext = do
+                    n <- htmlInputElementGetValue numInput
+                    tryTakeMVar next -- Discard existing next item
+                    throwTo worker NewValueException
+                    takeMVar ready
+                    putMVar next n
+
+    -- Lets wire up some events
+    elementOnkeydown  numInput (liftIO setNext)
+    elementOnkeyup    numInput (liftIO setNext)
+    elementOnkeypress numInput (liftIO setNext)
+
+    putStrLn "This is stdout."
+    hPutStrLn stderr "This is stderr."
+    putStrLn "You can get input from stdin."
+    putStrLn "(we also support threads and MVar, so you can wait 20 seconds if you don't have a keyboard)"
+    putStr   "What is your name ? "
+    hFlush stdout
+
+    -- We can use MVars and threads
+    nameMVar <- newEmptyMVar
+
+    -- Wait for input on one thread
+    forkIO $ do
+      line <- getLine
+      putMVar nameMVar line
+
+    -- Wait for 20s on another
+    forkIO $ do
+      threadDelay 20000000
+      putMVar nameMVar "World"
+
+    -- Get the first result
+    forkIO $ do
+      name <- takeMVar nameMVar
+      postGUISync $ do
+        htmlElementSetInnerText heading $ "Hello " ++ name ++ " and Welcome GHCJS"
+
+        -- Set the input focus to the prime number test
+        elementFocus numInput
+
+        -- Now stdout is free let's try some more JavaScript stuff...
+        runjs $ do
+            -- Some helper functions to print JS values
+            let log       v = deRefVal      v >>= (liftIO . print)
+                logNumber v = valToNumber   v >>= (liftIO . print)
+                logText   v = valToText     v >>= (liftIO . print)
+                logList   v = mapM deRefVal v >>= (liftIO . print)
+
+            -- Add Java Script logText function that calls the haskell logText
+            jsLogText <- jsg "logText" <# fun (\_f _this [s] -> logText s)
+
+            -- logText("Hello World")
+            jsLogText # ["Hello World"]
+
+            -- console.log(Math.sin(1))
+            math <- jsg "Math"
+            let sin = js1 "sin"
+            math ^. sin (1::Double) >>= logNumber
+
+            -- (new Date()).toString()
+            -- (new Date(2013,1,1)).toString()
+            date <- jsg "Date"
+            new date () >>= logText
+            new date [2013,1,1::Double] >>= logText
+
+            -- eval("logText('Hello'); 1+2")
+            eval "logText('Hello'); 1+2" >>= log
+
+            -- logText(["Test", navigator.appVersion.length].length)
+            navigator  <- jsg "navigator"
+            let appVersion = js "appVersion"
+                jsLength   = js "length"
+            jsLogText # array ("Test", navigator ^. appVersion . jsLength) ^. jsLength
+
+            -- callbackToHaskell = function () { console.log(arguments); }
+            callBack <- jsg "callbackToHaskell" <# fun (\f this -> logList)
+
+            -- callbackToHaskell(null, undefined, true, 3.14, "Hello")
+            callBack # [ValNull, ValUndefined, ValBool True, ValNumber 3.14, ValString $ T.pack "List of JSValues"]
+            -- or
+            callBack # [val JSNull, val (), val True, val (3.14 :: Double), val "List of JSC JSValueRefs"]
+            -- or
+            callBack # (JSNull, (), True, (3.14 :: Double), "5-tuple")
+            -- or
+            eval "callbackToHaskell(null, undefined, true, 3.14, \"Eval\")"
+#ifdef jmacro_MIN_VERSION
+            -- or
+            $([evalJM|callbackToHaskell(null, undefined, true, 3.14, "Evaled JMacro")|])
+            -- or
+            jmfunc <- $([evalJME| \ a b c d e -> callbackToHaskell(a, b, c, d, e) |])
+            let callJM :: (JSNull, (), Bool, Double, String) -> JSC JSValueRef = call jmfunc jmfunc
+            callJM (JSNull, (), True, 3.14, "Via JMacro Evaled Function")
+#endif
+
+            -- var a = []; for(var i = 0; i != 10; ++i) a[i] = i; console.log(a[5]);
+            array ([0..10]::[Double]) !! 5 >>= log
+
+            return ()
+
+    -- What is this?
+    elementOnclick heading $ do
+      shiftIsPressed <- mouseShiftKey
+      when shiftIsPressed . liftIO $ lazyLoad_freecell webView doc body
+
+    return ()
+
+-- Integer uses goog.math.Integer compiled to Javascript
+isPrime :: Integer -> Bool
+isPrime p = p > 1 && (all (\n -> p `mod` n /= 0)
+                     $ takeWhile (\n -> n*n <= p) [2..])
+
+validatePrimeMessage :: Integer -> Html
+validatePrimeMessage p | isPrime p = [shamlet|$newline always
+                                        <b>Yes</b>, #{p} is a prime|]
+                       | otherwise = [shamlet|$newline always
+                                        <b>No</b>, #{p} is not a prime|]
+
+validatePrime :: String -> Text
+validatePrime s = renderHtml $
+  case reads s of
+    [(n, "")] -> validatePrimeMessage n
+    _         -> [shamlet|$newline always
+                    <b>No</b>, that is not a number|]
+
+-- Sometimes you might have something that needs more JavaScript than everything else
+-- you can tell the GHCJS linker to put its dependancies in a sparate file using
+-- a lazyLoad_ prefix
+{-# NOINLINE lazyLoad_freecell #-}
+lazyLoad_freecell webView doc body = do
+    htmlElementSetInnerHTML body $
+      "<div style=\"position:relative;left:0px;top:0px;background-color:#e0d0ff;width:700px;height:500px\" "++
+      "id=\"freecell\" draggable=\"false\"></div>"
+    unlisten <- engine webView "freecell" =<< mkFreecell
+    -- Prevent finalizers running too soon
+    forkIO $ forever (threadDelay 1000000000) >> unlisten
+    return ()
+    </code></pre>
+    #+END_HTML
+*** Scalajs
+    - http://www.scala-js.org/
+    - Scala in javascript!
+    - Good interop with js
+    - Write Scala, call js using js.Dynamic
+    - Type-safe, rich
+
+    #+BEGIN_NOTES
+    Same vein as GHC js.
+    But for scala.
+    Compilers and types mean less run, crash, or test.
+    Nice libraries. Syntax is noiser than Haskell.
+    Great if your team uses scala.
+    Good interoperability and type safety with js libs like jquery.
+    Callable from js. No more [] + {} issues (unless you make an implicit conversion)
+    #+END_NOTES
+    #+BEGIN_HTML
+    <pre><code data-trim class="scala">
+package example
+
+import org.scalajs.dom
+import scalatags.all._
+import scalatags.Tags2.section
+import scalatags.ExtendedString
+import rx._
+import rx.core.Propagator
+import scala.scalajs.js.annotation.JSExport
+
+
+case class Task(txt: Var[String], done: Var[Boolean])
+@JSExport
+object ScalaJSExample {
+
+  import Framework._
+
+  val editing = Var[Option[Task]](None)
+
+  val tasks = Var(
+    Seq(
+      Task(Var("TodoMVC Task A"), Var(true)),
+      Task(Var("TodoMVC Task B"), Var(false)),
+      Task(Var("TodoMVC Task C"), Var(false))
+    )
+  )
+
+  val filters: Map[String, Task => Boolean] = Map(
+    ("All", t => true),
+    ("Active", !_.done()),
+    ("Completed", _.done())
+  )
+
+  val filter = Var("All")
+
+  val inputBox = new DomRef[dom.HTMLInputElement](input(
+    id:="new-todo",
+    placeholder:="What needs to be done?",
+    autofocus:=true
+  ))
+
+  @JSExport
+  def main(): Unit = {
+    dom.document.body.innerHTML = Seq(
+      section(id:="todoapp")(
+        header(id:="header")(
+          h1("todos"),
+          form(
+            inputBox,
+            onsubmit <~ {
+              tasks() = Task(Var(inputBox.value), Var(false)) +: tasks()
+              inputBox.value = ""
+            }
+          )
+        ),
+        section(id:="main")(
+          input(
+            id:="toggle-all",
+            `type`:="checkbox",
+            cursor:="pointer",
+            onclick <~ {
+              val target = tasks().exists(_.done() == false)
+              Var.set(tasks().map(_.done -> target): _*)
+            }
+          ),
+          label(`for`:="toggle-all", "Mark all as complete"),
+          Rx{
+            dom.console.log("A")
+            ul(id:="todo-list")(
+              for(task <- tasks() if filters(filter())(task)) yield {
+                dom.console.log("B", task.txt())
+                val inputRef = new DomRef[dom.HTMLInputElement](
+                  input(`class`:="edit", value:=task.txt())
+                )
+                li(if(task.done()) `class`:="completed" else (), if(editing() == Some(task)) `class`:="editing" else ())(
+                  div(`class`:="view")(
+                    "ondblclick".attr <~ {editing() = Some(task)},
+                    input(
+                      `class`:="toggle",
+                      `type`:="checkbox",
+                      cursor:="pointer",
+                      onchange <~ {task.done() = !task.done()},
+                      if(task.done()) checked:=true else ()
+                    ),
+                    label(task.txt()),
+                    button(
+                      `class`:="destroy",
+                      cursor:="pointer",
+                      onclick <~ (tasks() = tasks().filter(_ != task))
+                    )
+                  ),
+                  form(
+                    onsubmit <~ {
+                      task.txt() = inputRef.value
+                      editing() = None
+                    },
+                    inputRef
+                  )
+                )
+              }
+            )
+          },
+          footer(id:="footer")(
+            span(id:="todo-count")(strong(Rx(tasks().count(!_.done()).toString)), " item left"),
+            Rx{
+              ul(id:="filters")(
+                for ((name, pred) <- filters.toSeq) yield {
+                  li(a(
+                    if(name == filter()) `class`:="selected" else (),
+                    name,
+                    href:="#",
+                    onclick <~ (filter() = name)
+                  ))
+                }
+              )
+            },
+            button(
+              id:="clear-completed",
+              onclick <~ {tasks() = tasks().filter(!_.done())},
+              "Clear completed (", Rx(tasks().count(_.done()).toString), ")"
+            )
+          )
+        ),
+        footer(id:="info")(
+          p("Double-click to edit a todo"),
+          p(a(href:="https://github.com/lihaoyi/workbench-example-app/blob/todomvc/src/main/scala/example/ScalaJSExample.scala")("Source Code")),
+          p("Created by ", a(href:="http://github.com/lihaoyi")("Li Haoyi"))
+        )
+      )
+    ).mkString
+  }
+}
+</pre></code>
+#+END_HTML
+* Javascript Can run Anything
+  - JS or ASMJS can be the basis for any language you like
+  - No more WAT
+  - Have fun
